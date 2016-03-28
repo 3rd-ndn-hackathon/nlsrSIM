@@ -20,11 +20,7 @@
  **/
 
 #include "test-common.hpp"
-#ifdef NS3_NLSR_SIM
-#include "nlsr-logger.hpp"
-#else
 #include "logger.hpp"
-#endif
 
 #include <fstream>
 #include "conf-file-processor.hpp"

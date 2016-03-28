@@ -23,15 +23,11 @@
 
 #include "common.hpp"
 #include "conf-parameter.hpp"
+#include "logger.hpp"
 #include "lsa.hpp"
 #include "lsdb.hpp"
 #include "sequencing-manager.hpp"
 #include "utility/name-helper.hpp"
-#ifdef NS3_NLSR_SIM
-#include "nlsr-logger.hpp"
-#else
-#include "logger.hpp"
-#endif
 
 namespace nlsr {
 

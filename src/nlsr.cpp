@@ -27,12 +27,7 @@
 
 #include "nlsr.hpp"
 #include "adjacent.hpp"
-#ifdef NS3_NLSR_SIM
-#include "nlsr-logger.hpp"
-#include "ns3/object.h"
-#else
 #include "logger.hpp"
-#endif
 
 
 namespace nlsr {

@@ -22,11 +22,7 @@
 #include "face-controller.hpp"
 
 #include "common.hpp"
-#ifdef NS3_NLSR_SIM
-#include "nlsr-logger.hpp"
-#else
 #include "logger.hpp"
-#endif
 
 namespace nlsr {
 namespace util {
