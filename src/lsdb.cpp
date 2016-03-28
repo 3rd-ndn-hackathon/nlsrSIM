@@ -26,7 +26,11 @@
 #include "nlsr.hpp"
 #include "conf-parameter.hpp"
 #include "utility/name-helper.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
 
 namespace nlsr {
 

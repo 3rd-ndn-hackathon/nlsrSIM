@@ -28,7 +28,12 @@
 #include "lsa.hpp"
 #include "lsdb.hpp"
 #include "map.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
+
 namespace nlsr {
 
 INIT_LOGGER("Map");

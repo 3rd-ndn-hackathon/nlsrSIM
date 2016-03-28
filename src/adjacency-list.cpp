@@ -27,7 +27,11 @@
 #include "adjacent.hpp"
 #include "common.hpp"
 #include "nlsr.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
 
 namespace nlsr {
 
