@@ -31,7 +31,11 @@
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
 #include "name-prefix-table.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
 
 namespace nlsr {
 
