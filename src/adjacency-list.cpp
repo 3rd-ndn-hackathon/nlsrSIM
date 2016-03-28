@@ -273,6 +273,22 @@ AdjacencyList::findAdjacent(uint64_t faceId)
   return 0;
 }
 
+#ifdef NS3_NLSR_SIM
+Adjacent *
+AdjacencyList::findAdjacent(const std::string& faceUri)
+{
+  std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
+                                                  m_adjList.end(),
+                                                  ndn::bind(&Adjacent::compareFaceUri,
+                                                            _1, faceUri));
+  if (it != m_adjList.end()) {
+    return &(*it);
+  }
+
+  return 0;
+}
+#endif
+
 uint64_t
 AdjacencyList::getFaceId(const std::string& faceUri)
 {

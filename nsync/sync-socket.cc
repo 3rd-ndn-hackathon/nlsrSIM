@@ -71,8 +71,12 @@ SyncSocket::publishData(const Name &prefix, uint64_t session,
   data->setContent(reinterpret_cast<const uint8_t*>(buf), len);
   data->setFreshnessPeriod(ndn::time::seconds(freshness));
 
+#ifdef NS3_NLSR_SIM
+  publishDataInternal(data, prefix, session, seq);
+#else
   m_face->getIoService().post(bind(&SyncSocket::publishDataInternal, this,
                                    data, prefix, session,seq));
+#endif
 
   return true;
 }

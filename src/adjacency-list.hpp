@@ -105,6 +105,11 @@ public:
   Adjacent*
   findAdjacent(uint64_t faceId);
 
+#ifdef NS3_NLSR_SIM
+  Adjacent*
+  findAdjacent(const std::string& faceUri);
+#endif
+
   uint64_t
   getFaceId(const std::string& faceUri);
 

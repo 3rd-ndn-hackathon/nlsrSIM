@@ -473,6 +473,9 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     {
       try {
         ConfigSection CommandAttriTree = tn->second;
+#ifdef NS3_NLSR_SIM
+        std::string nodeId = CommandAttriTree.get<std::string>("node-id");
+#endif
         std::string name = CommandAttriTree.get<std::string>("name");
         std::string faceUri = CommandAttriTree.get<std::string>("face-uri");
 
@@ -487,7 +490,11 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
                                                        Adjacent::DEFAULT_LINK_COST);
         ndn::Name neighborName(name);
         if (!neighborName.empty()) {
+#ifdef NS3_NLSR_SIM
+          Adjacent adj(nodeId, name, faceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
+#else
           Adjacent adj(name, faceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
+#endif
           m_nlsr.getAdjacencyList().insert(adj);
         }
         else {

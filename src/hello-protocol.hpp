@@ -52,6 +52,9 @@ public:
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
+  void
+  registerAdjacentPrefixes();
+
 private:
   void
   processInterestTimedOut(const ndn::Interest& interest);

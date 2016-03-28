@@ -278,4 +278,19 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
   }
 }
 
+void
+HelloProtocol::registerAdjacentPrefixes()
+{
+  std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
+  for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
+       ++it) {
+    _LOG_DEBUG("Registering Adjacent: " << (*it).getName());
+    _LOG_DEBUG("Adjacent name: " << (*it).getName());
+    _LOG_DEBUG("Adjacent face uri: " << (*it).getConnectingFaceUri());
+    _LOG_DEBUG("Adjacent link cost: " << (*it).getLinkCost());
+    registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
+                     (*it).getLinkCost(), ndn::time::milliseconds::max());
+  }
+}
+
 } //namespace nlsr

@@ -48,6 +48,16 @@ public:
   Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
            Status s, uint32_t iton, uint64_t faceId);
 
+#ifdef NS3_NLSR_SIM
+  Adjacent(const std::string& simName, const ndn::Name& an, const std::string& cfu,  double lc, Status s, uint32_t iton, uint64_t faceId);
+
+  const std::string&
+  getSimulatedName() const
+  {
+    return m_simName;
+  }
+#endif
+
   const ndn::Name&
   getName() const
   {
@@ -149,6 +159,9 @@ public:
   static const float DEFAULT_LINK_COST;
 
 private:
+#ifdef NS3_NLSR_SIM
+  std::string m_simName;
+#endif
   ndn::Name m_name;
   std::string m_connectingFaceUri;
   double m_linkCost;

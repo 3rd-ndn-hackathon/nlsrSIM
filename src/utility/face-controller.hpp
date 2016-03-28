@@ -63,6 +63,11 @@ private:
                     const CommandFailureCallback& onFailure,
                     const ndn::util::FaceUri& request);
 
+#ifdef NS3_NLSR_SIM
+  uint32_t
+  getFaceFromP2PLink(std::string);
+#endif
+
 private:
   boost::asio::io_service& m_ioService;
   ndn::nfd::Controller& m_controller;
