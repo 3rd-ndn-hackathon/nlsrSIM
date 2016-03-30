@@ -50,12 +50,14 @@ FaceMap::writeLog()
       it != m_table.end(); ++it) {
     _LOG_DEBUG("Face Map Entry (FaceUri: " << (*it).getFaceUri() << " Face Id: "
                << (*it).getFaceId() << ")");
+#if 0
 #ifdef NS3_NLSR_SIM
   ns3::Ptr<ns3::Node> thisNode;
   thisNode = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
   _LOG_DEBUG("------- FIB Table of Node: " << ns3::Names::FindName(thisNode) << " -----------");
   ns3::Ptr<ns3::ndn::NlsrApp> nlsrApp = thisNode->GetApplication(0)->GetObject<ns3::ndn::NlsrApp> ();
   nlsrApp->GetNlsr().getFib().writeLog();
+#endif
 #endif
   }
 }
