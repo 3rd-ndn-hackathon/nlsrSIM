@@ -330,7 +330,8 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     }
     else {
       std::cerr << "Provided log directory <" << logDir << "> does not exist" << std::endl;
-      return false;
+      std::cerr << "Creating log directory <" << logDir << ">" << std::endl;
+      boost::filesystem::create_directories(logDir);
     }
   }
   catch (const std::exception& ex) {
@@ -364,7 +365,8 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     }
     else {
       std::cerr << "Provided sequence directory <" << seqDir << "> does not exist" << std::endl;
-      return false;
+      std::cerr << "Creating sequence directory <" << seqDir << ">" << std::endl;
+      boost::filesystem::create_directories(seqDir);
     }
   }
   catch (const std::exception& ex) {
