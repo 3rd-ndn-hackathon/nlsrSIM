@@ -26,6 +26,7 @@
 #include "utility/name-helper.hpp"
 #ifdef NS3_NLSR_SIM
 #include "nlsr-logger.hpp"
+#include "helper/ndn-nlsr-tracer.hpp"
 #else
 #include "logger.hpp"
 #endif
@@ -50,6 +51,9 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
                                                  _1, _2),
                                        ndn::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
+
+  ns3::ndn::NlsrTracer &tracer = ns3::ndn::NlsrTracer::Instance();
+  tracer.HelloTrace("", "", "", "", "");
 }
 
 void
