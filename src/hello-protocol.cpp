@@ -190,7 +190,7 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
                                            this, _1, _2));
 
 #ifdef NS3_NLSR_SIM
-  m_tracer.HelloTrace(interest.getName().toUri(), "inData", std::to_string(++m_inData), std::to_string(interest.wireEncode().size()));
+  m_tracer.HelloTrace(data.getName().toUri(), "inData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
 #endif
 }
 
