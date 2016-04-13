@@ -26,7 +26,7 @@
 #include "utility/name-helper.hpp"
 #ifdef NS3_NLSR_SIM
 #include "nlsr-logger.hpp"
-#include "helper/ndn-nlsr-tracer.hpp"
+#include <string>
 #else
 #include "logger.hpp"
 #endif
@@ -52,8 +52,9 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
                                        ndn::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
 
-  ns3::ndn::NlsrTracer &tracer = ns3::ndn::NlsrTracer::Instance();
-  tracer.HelloTrace("", "", "", "", "");
+#ifdef NS3_NLSR_SIM
+  m_tracer.HelloTrace(interestName.toUri(), "outInterest", std::to_string(++m_outInterest), std::to_string(i.wireEncode().size()));
+#endif
 }
 
 void
@@ -98,6 +99,9 @@ HelloProtocol::processInterest(const ndn::Name& name,
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
+#ifdef NS3_NLSR_SIM
+  m_tracer.HelloTrace(interestName.toUri(), "inInterest", std::to_string(++m_inInterest), std::to_string(interest.wireEncode().size()));
+#endif
   ndn::Name neighbor;
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   _LOG_DEBUG("Neighbor: " << neighbor);
@@ -110,6 +114,9 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
+#ifdef NS3_NLSR_SIM
+    m_tracer.HelloTrace(interestName.toUri(), "outData", std::to_string(++m_outData), std::to_string(data->wireEncode().size()));
+#endif
     Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       if(adjacent->getFaceId() != 0){
@@ -138,6 +145,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
+#ifdef NS3_NLSR_SIM
+  m_tracer.HelloTrace(interestName.toUri(), "timedOutInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+#endif
   ndn::Name neighbor = interestName.getPrefix(-3);
   _LOG_DEBUG("Neighbor: " << neighbor);
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
@@ -178,6 +188,10 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
                                  ndn::bind(&HelloProtocol::onContentValidated, this, _1),
                                  ndn::bind(&HelloProtocol::onContentValidationFailed,
                                            this, _1, _2));
+
+#ifdef NS3_NLSR_SIM
+  m_tracer.HelloTrace(interest.getName().toUri(), "inData", std::to_string(++m_inData), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 void
