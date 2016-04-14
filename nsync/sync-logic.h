@@ -46,6 +46,10 @@
 #endif
 #endif
 
+#ifdef NS3_NLSR_SIM
+#include "helper/ndn-nlsr-tracer.hpp"
+#endif
+
 namespace Sync {
 
 struct MissingDataInfo {
@@ -215,6 +219,17 @@ private:
 
   std::string m_instanceId;
   static int m_instanceCounter;
+
+#ifdef NS3_NLSR_SIM
+  ns3::ndn::NlsrTracer &m_tracer;
+  long m_outSyncInterest;
+  long m_outRecovInterest;
+  long m_inData;
+  long m_timedOutInterest;
+  long m_inSyncInterest;
+  long m_inRecovInterest;
+  long m_outData;
+#endif
 };
 
 

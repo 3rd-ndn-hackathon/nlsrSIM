@@ -88,6 +88,9 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
   , m_rangeUniformRandom (m_randomGenerator, boost::uniform_int<> (200,1000))
   , m_reexpressionJitter (m_randomGenerator, boost::uniform_int<> (100,500))
   , m_recoveryRetransmissionInterval (m_defaultRecoveryRetransmitInterval)
+#ifdef NS3_NLSR_SIM
+  , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
 {
   m_syncRegisteredPrefixId = m_face->setInterestFilter (m_syncPrefix,
                                                         bind(&SyncLogic::onSyncInterest,
@@ -102,6 +105,14 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
                                                         bind (&SyncLogic::sendSyncInterest, this));
 
   m_instanceId = string("Instance " + boost::lexical_cast<string>(m_instanceCounter++) + " ");
+
+  m_outSyncInterest = 0;
+  m_outRecovInterest = 0;
+  m_inData = 0;
+  m_timedOutInterest = 0;
+  m_inSyncInterest = 0;
+  m_inRecovInterest = 0;
+  m_outData = 0;
 }
 
 SyncLogic::SyncLogic (const Name& syncPrefix,
@@ -121,6 +132,9 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
   , m_rangeUniformRandom (m_randomGenerator, boost::uniform_int<> (200,1000))
   , m_reexpressionJitter (m_randomGenerator, boost::uniform_int<> (100,500))
   , m_recoveryRetransmissionInterval (m_defaultRecoveryRetransmitInterval)
+#ifdef NS3_NLSR_SIM
+  , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
 {
   m_syncRegisteredPrefixId = m_face->setInterestFilter (m_syncPrefix,
                                                         bind(&SyncLogic::onSyncInterest,
@@ -132,6 +146,14 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
 
   m_reexpressingInterestId = m_scheduler.scheduleEvent (ndn::time::seconds (0),
                                                         bind (&SyncLogic::sendSyncInterest, this));
+
+  m_outSyncInterest = 0;
+  m_outRecovInterest = 0;
+  m_inData = 0;
+  m_timedOutInterest = 0;
+  m_inSyncInterest = 0;
+  m_inRecovInterest = 0;
+  m_outData = 0;
 }
 
 SyncLogic::~SyncLogic ()
@@ -191,10 +213,16 @@ SyncLogic::onSyncInterest (const Name& prefix, const ndn::Interest& interest)
       if (type == "normal") // kind of ineffective...
         {
           processSyncInterest (name, digest);
+#ifdef NS3_NLSR_SIM
+    m_tracer.NsyncTrace(interest.getName().toUri(), "inSyncInterest", std::to_string(++m_inSyncInterest), std::to_string(interest.wireEncode().size()));
+#endif
         }
       else if (type == "recovery")
         {
           processSyncRecoveryInterest (name, digest);
+#ifdef NS3_NLSR_SIM
+    m_tracer.NsyncTrace(interest.getName().toUri(), "inRecovInterest", std::to_string(++m_inRecovInterest), std::to_string(interest.wireEncode().size()));
+#endif
         }
     }
   catch (Error::DigestCalculationError &e)
@@ -220,6 +248,9 @@ SyncLogic::onSyncRegisterFailed(const Name& prefix, const string& msg)
 void
 SyncLogic::onSyncData(const ndn::Interest& interest, Data& data)
 {
+#ifdef NS3_NLSR_SIM
+  m_tracer.NsyncTrace(data.getName().toUri(), "inData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
+#endif
   OnDataValidated onValidated = bind(&SyncLogic::onSyncDataValidated, this, _1);
   OnDataValidationFailed onValidationFailed = bind(&SyncLogic::onSyncDataValidationFailed, this, _1);
   m_validator->validate(data, onValidated, onValidationFailed);
@@ -229,6 +260,9 @@ void
 SyncLogic::onSyncTimeout(const ndn::Interest& interest)
 {
   // It is OK. Others will handle the time out situation.
+#ifdef NS3_NLSR_SIM
+  m_tracer.NsyncTrace(interest.getName().toUri(), "timedOutInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 void
@@ -625,6 +659,9 @@ SyncLogic::sendSyncInterest ()
   m_face->expressInterest(interest,
                           bind(&SyncLogic::onSyncData, this, _1, _2),
                           bind(&SyncLogic::onSyncTimeout, this, _1));
+#ifdef NS3_NLSR_SIM
+  m_tracer.NsyncTrace(interest.getName().toUri(), "outSyncInterest", std::to_string(++m_outSyncInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 void
@@ -653,6 +690,9 @@ SyncLogic::sendSyncRecoveryInterests (DigestConstPtr digest)
   m_face->expressInterest(interest,
                           bind(&SyncLogic::onSyncData, this, _1, _2),
                           bind(&SyncLogic::onSyncTimeout, this, _1));
+#ifdef NS3_NLSR_SIM
+  m_tracer.NsyncTrace(interest.getName().toUri(), "outRecovInterest", std::to_string(++m_outRecovInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 

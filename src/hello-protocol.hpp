@@ -45,6 +45,11 @@ public:
     , m_tracer(ns3::ndn::NlsrTracer::Instance())
 #endif
   {
+    m_outInterest = 0;
+    m_inData = 0;
+    m_timedOutInterest = 0;
+    m_inInterest = 0;
+    m_outData = 0;
   }
 
   void

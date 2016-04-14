@@ -219,6 +219,9 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
     doDijkstraPathCalculation(sourceRouter);
     // update routing table
     addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
+#ifdef NS3_NLSR_SIM
+    m_tracer.FibTrace("-", "dijkSinglePath", std::to_string(++m_dijkSinglePath));
+#endif
   }
   else {
     // Multi Path
@@ -233,6 +236,9 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
       //update routing table
       addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
     }
+#ifdef NS3_NLSR_SIM
+    m_tracer.FibTrace("-", "dijkMultiPath", std::to_string(++m_dijkMultiPath));
+#endif
     freeLinks();
     freeLinksCosts();
   }
@@ -437,6 +443,13 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
       }
     }
   }
+#ifdef NS3_NLSR_SIM
+  if(!m_isDryRun) {
+    m_tracer.FibTrace("-", "hyperbolRouting", std::to_string(++m_hyperbolRouting));
+  } else  {
+    m_tracer.FibTrace("-", "hyperDryRouting", std::to_string(++m_hyperDryRouting));
+  }
+#endif
 }
 
 double
