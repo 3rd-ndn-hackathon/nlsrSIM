@@ -787,6 +787,10 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                                  this, _2, deadline, lsaName, seqNo),
                                        ndn::bind(&Lsdb::processInterestTimedOut,
                                                  this, _1, timeoutCount, deadline, lsaName, seqNo));
+
+#ifdef NS3_NLSR_SIM
+  m_tracer.NameLsaTrace(interestName.toUri(), "outLsaInterest", std::to_string(++m_outInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 void
@@ -794,6 +798,10 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
   const ndn::Name& interestName(interest.getName());
   _LOG_DEBUG("Interest received for LSA: " << interestName);
+
+#ifdef NS3_NLSR_SIM
+  m_tracer.NameLsaTrace(interestName.toUri(), "inLsaInterest", std::to_string(++m_inInterest), std::to_string(interest.wireEncode().size()));
+#endif
 
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(interest.getName(), chkString);
@@ -837,6 +845,9 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
   _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
   _LOG_DEBUG("Data signed with: " << signingCertName);
   m_nlsr.getNlsrFace().put(*data);
+#ifdef NS3_NLSR_SIM
+  m_tracer.NameLsaTrace(data->getName().toUri(), "outLsaData", std::to_string(++m_outData), std::to_string(data->wireEncode().size()));
+#endif
 }
 
 void
@@ -886,6 +897,10 @@ Lsdb::onContent(const ndn::Data& data,
                 const steady_clock::TimePoint& deadline, ndn::Name lsaName,
                 uint64_t seqNo)
 {
+#ifdef NS3_NLSR_SIM
+  m_tracer.NameLsaTrace(data.getName().toUri(), "inLsaData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
+#endif
+
   _LOG_DEBUG("Received data for LSA(name): " << data.getName());
   if (data.getSignature().hasKeyLocator()) {
     if (data.getSignature().getKeyLocator().getType() == ndn::KeyLocator::KeyLocator_Name) {
@@ -1037,6 +1052,9 @@ Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmit
       expressInterest(interestName, retransmitNo + 1, deadline);
     }
   }
+#ifdef NS3_NLSR_SIM
+  m_tracer.NameLsaTrace(interestName.toUri(), "timedoutInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 ndn::time::system_clock::TimePoint

@@ -31,6 +31,10 @@
 #include "lsa.hpp"
 #include "test-access-control.hpp"
 
+#ifdef NS3_NLSR_SIM
+#include "helper/ndn-nlsr-tracer.hpp"
+#endif
+
 namespace nlsr {
 
 using namespace ndn::time;
@@ -47,7 +51,15 @@ public:
     , m_sync(sync)
     , m_lsaRefreshTime(0)
     , m_adjLsaBuildInterval(static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT))
+#ifdef NS3_NLSR_SIM
+    , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
   {
+    m_outInterest = 0;
+    m_inData = 0;
+    m_timedOutInterest = 0;
+    m_inInterest = 0;
+    m_outData = 0;
   }
 
   bool
@@ -290,6 +302,15 @@ private:
   static const steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 
   ndn::time::seconds m_adjLsaBuildInterval;
+
+#ifdef NS3_NLSR_SIM
+  ns3::ndn::NlsrTracer &m_tracer;
+  long m_outInterest;
+  long m_inData;
+  long m_timedOutInterest;
+  long m_inInterest;
+  long m_outData;
+#endif
 };
 
 }//namespace nlsr
