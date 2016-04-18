@@ -107,12 +107,15 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
   m_instanceId = string("Instance " + boost::lexical_cast<string>(m_instanceCounter++) + " ");
 
   m_outSyncInterest = 0;
+  m_inSyncData = 0;
   m_outRecovInterest = 0;
-  m_inData = 0;
-  m_timedOutInterest = 0;
+  m_inRecovData = 0;
+  m_timedOutSyncInterest = 0;
+  m_timedOutRecovInterest = 0;
   m_inSyncInterest = 0;
+  m_outSyncData = 0;
   m_inRecovInterest = 0;
-  m_outData = 0;
+  m_outRecovData = 0;
 }
 
 SyncLogic::SyncLogic (const Name& syncPrefix,
@@ -148,12 +151,15 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
                                                         bind (&SyncLogic::sendSyncInterest, this));
 
   m_outSyncInterest = 0;
+  m_inSyncData = 0;
   m_outRecovInterest = 0;
-  m_inData = 0;
-  m_timedOutInterest = 0;
+  m_inRecovData = 0;
+  m_timedOutSyncInterest = 0;
+  m_timedOutRecovInterest = 0;
   m_inSyncInterest = 0;
+  m_outSyncData = 0;
   m_inRecovInterest = 0;
-  m_outData = 0;
+  m_outRecovData = 0;
 }
 
 SyncLogic::~SyncLogic ()
@@ -249,7 +255,10 @@ void
 SyncLogic::onSyncData(const ndn::Interest& interest, Data& data)
 {
 #ifdef NS3_NLSR_SIM
-  m_tracer.NsyncTrace(data.getName().toUri(), "inData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
+  if (data.getName().size() > 4 && data.getName().get(3).toUri().compare("recovery") == 0)
+    m_tracer.NsyncTrace(data.getName().toUri(), "inRecovData", std::to_string(++m_inRecovData), std::to_string(data.wireEncode().size()));
+  else
+    m_tracer.NsyncTrace(data.getName().toUri(), "inSyncData", std::to_string(++m_inSyncData), std::to_string(data.wireEncode().size()));
 #endif
   OnDataValidated onValidated = bind(&SyncLogic::onSyncDataValidated, this, _1);
   OnDataValidationFailed onValidationFailed = bind(&SyncLogic::onSyncDataValidationFailed, this, _1);
@@ -261,7 +270,10 @@ SyncLogic::onSyncTimeout(const ndn::Interest& interest)
 {
   // It is OK. Others will handle the time out situation.
 #ifdef NS3_NLSR_SIM
-  m_tracer.NsyncTrace(interest.getName().toUri(), "timedOutInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+  if (interest.getName().size() > 4 && interest.getName().get(3).toUri().compare("recovery") == 0)
+    m_tracer.NsyncTrace(interest.getName().toUri(), "timedOutRecovInterest", std::to_string(++m_timedOutRecovInterest), std::to_string(interest.wireEncode().size()));
+  else
+    m_tracer.NsyncTrace(interest.getName().toUri(), "timedOutSyncInterest", std::to_string(++m_timedOutSyncInterest), std::to_string(interest.wireEncode().size()));
 #endif
 }
 
@@ -723,6 +735,12 @@ SyncLogic::sendSyncData (const Name &name, DigestConstPtr digest, SyncStateMsg &
   m_keyChain->sign(*syncData);
 
   m_face->put(*syncData);
+#ifdef NS3_NLSR_SIM
+  if (syncData->getName().size() > 4 && syncData->getName().get(3).toUri().compare("recovery") == 0)
+    m_tracer.NsyncTrace(syncData->getName().toUri(), "outRecovData", std::to_string(++m_outRecovData), std::to_string(syncData->wireEncode().size()));
+  else
+    m_tracer.NsyncTrace(syncData->getName().toUri(), "outSyncData", std::to_string(++m_outSyncData), std::to_string(syncData->wireEncode().size()));
+#endif
 
   delete []wireData;
 

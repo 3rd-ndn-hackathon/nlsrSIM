@@ -276,7 +276,7 @@ Nlsr::initialize()
 
   registerKeyPrefix();
   registerLocalhostPrefix();
-  m_helloProtocol.registerAdjacentPrefixes();
+  //m_helloProtocol.registerAdjacentPrefixes();
 
   m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 

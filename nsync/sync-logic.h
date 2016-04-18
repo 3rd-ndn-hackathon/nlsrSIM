@@ -223,12 +223,15 @@ private:
 #ifdef NS3_NLSR_SIM
   ns3::ndn::NlsrTracer &m_tracer;
   long m_outSyncInterest;
+  long m_inSyncData;
   long m_outRecovInterest;
-  long m_inData;
-  long m_timedOutInterest;
+  long m_inRecovData;
+  long m_timedOutSyncInterest;
+  long m_timedOutRecovInterest;
   long m_inSyncInterest;
+  long m_outSyncData;
   long m_inRecovInterest;
-  long m_outData;
+  long m_outRecovData;
 #endif
 };
 
