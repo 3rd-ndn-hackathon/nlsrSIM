@@ -86,12 +86,20 @@ private:
                         const ndn::Name& name);
 
   void
+  onRegistrationSuccess1(const ndn::nfd::ControlParameters& commandSuccessResult,
+                        const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
+
+  void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                         const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
 
   void
   registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                    double linkCost, const ndn::time::milliseconds& timeout);
+  void
+  registerPrefixes1(const ndn::Name& adjName, const std::string& faceUri,
+                   double linkCost, const ndn::time::milliseconds& timeout);
+private:
 private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;

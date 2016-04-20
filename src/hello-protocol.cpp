@@ -224,6 +224,18 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
 }
 
 void
+HelloProtocol::registerPrefixes1(const ndn::Name& adjName, const std::string& faceUri,
+                               double linkCost, const ndn::time::milliseconds& timeout)
+{
+  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0,
+                                 ndn::bind(&HelloProtocol::onRegistrationSuccess1,
+                                           this, _1, adjName,timeout),
+                                 ndn::bind(&HelloProtocol::onRegistrationFailure,
+                                           this, _1, _2, adjName));
+}
+
+void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, const ndn::time::milliseconds& timeout)
 {
@@ -233,6 +245,30 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                            this, _1, adjName,timeout),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
                                            this, _1, _2, adjName));
+}
+
+void
+HelloProtocol::onRegistrationSuccess1(const ndn::nfd::ControlParameters& commandSuccessResult,
+                                     const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
+{
+  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+  if (adjacent != 0) {
+    adjacent->setFaceId(commandSuccessResult.getFaceId());
+    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+    broadcastKeyPrefix.append("KEYS");
+    std::string faceUri = adjacent->getConnectingFaceUri();
+    double linkCost = adjacent->getLinkCost();
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.setStrategies();
+  }
 }
 
 void
@@ -295,6 +331,7 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
   }
 }
 
+
 void
 HelloProtocol::registerAdjacentPrefixes()
 {
@@ -305,7 +342,7 @@ HelloProtocol::registerAdjacentPrefixes()
     _LOG_DEBUG("Adjacent name: " << (*it).getName());
     _LOG_DEBUG("Adjacent face uri: " << (*it).getConnectingFaceUri());
     _LOG_DEBUG("Adjacent link cost: " << (*it).getLinkCost());
-    registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
+    registerPrefixes1((*it).getName(), (*it).getConnectingFaceUri(),
                      (*it).getLinkCost(), ndn::time::milliseconds::max());
   }
 }
