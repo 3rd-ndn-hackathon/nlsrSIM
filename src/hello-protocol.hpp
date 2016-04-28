@@ -28,7 +28,7 @@
 #include <ndn-cxx/util/scheduler.hpp>
 
 #ifdef NS3_NLSR_SIM
-#include "helper/ndn-nlsr-tracer.hpp"
+#include "utils/tracers/ndn-nlsr-tracer.hpp"
 #endif
 
 namespace nlsr {

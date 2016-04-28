@@ -32,7 +32,7 @@
 #include "test-access-control.hpp"
 
 #ifdef NS3_NLSR_SIM
-#include "helper/ndn-nlsr-tracer.hpp"
+#include "utils/tracers/ndn-nlsr-tracer.hpp"
 #endif
 
 namespace nlsr {
