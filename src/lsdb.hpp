@@ -55,11 +55,27 @@ public:
     , m_tracer(ns3::ndn::NlsrTracer::Instance())
 #endif
   {
-    m_outInterest = 0;
-    m_inData = 0;
-    m_timedOutInterest = 0;
-    m_inInterest = 0;
-    m_outData = 0;
+#ifdef NS3_NLSR_SIM
+  m_outNlsaInterest = 0;
+  m_outLlsaInterest = 0;
+  m_outClsaInterest = 0;
+
+  m_inNlsaInterest = 0;
+  m_inLlsaInterest = 0;
+  m_inClsaInterest = 0;
+
+  m_outNlsaData = 0;
+  m_outLlsaData = 0;
+  m_outClsaData = 0;
+
+  m_inNlsaData = 0;
+  m_inLlsaData = 0;
+  m_inClsaData = 0;
+
+  m_timedoutNlsaInterest = 0;
+  m_timedoutLlsaInterest = 0;
+  m_timedoutClsaInterest = 0;
+#endif
   }
 
   bool
@@ -305,11 +321,25 @@ private:
 
 #ifdef NS3_NLSR_SIM
   ns3::ndn::NlsrTracer &m_tracer;
-  long m_outInterest;
-  long m_inData;
-  long m_timedOutInterest;
-  long m_inInterest;
-  long m_outData;
+  long m_outNlsaInterest;
+  long m_outLlsaInterest;
+  long m_outClsaInterest;
+
+  long m_inNlsaInterest;
+  long m_inLlsaInterest;
+  long m_inClsaInterest;
+
+  long m_outNlsaData;
+  long m_outLlsaData;
+  long m_outClsaData;
+
+  long m_inNlsaData;
+  long m_inLlsaData;
+  long m_inClsaData;
+
+  long m_timedoutNlsaInterest;
+  long m_timedoutLlsaInterest;
+  long m_timedoutClsaInterest;
 #endif
 };
 

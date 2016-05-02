@@ -789,7 +789,12 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                                  this, _1, timeoutCount, deadline, lsaName, seqNo));
 
 #ifdef NS3_NLSR_SIM
-  m_tracer.NameLsaTrace(interestName.toUri(), "outLsaInterest", std::to_string(++m_outInterest), std::to_string(interest.wireEncode().size()));
+  if (interestName.size() > 5 && interestName.get(5).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outNameLsaInterest", std::to_string(++m_outNlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outAdjLsaInterest", std::to_string(++m_outLlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outCordLsaInterest", std::to_string(++m_outClsaInterest), std::to_string(interest.wireEncode().size()));
 #endif
 }
 
@@ -800,7 +805,12 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   _LOG_DEBUG("Interest received for LSA: " << interestName);
 
 #ifdef NS3_NLSR_SIM
-  m_tracer.NameLsaTrace(interestName.toUri(), "inLsaInterest", std::to_string(++m_inInterest), std::to_string(interest.wireEncode().size()));
+  if (interestName.size() > 5 && interestName.get(5).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inNameLsaInterest", std::to_string(++m_inNlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inAdjLsaInterest", std::to_string(++m_inLlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inCordLsaInterest", std::to_string(++m_inClsaInterest), std::to_string(interest.wireEncode().size()));
 #endif
 
   string chkString("LSA");
@@ -846,7 +856,12 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
   _LOG_DEBUG("Data signed with: " << signingCertName);
   m_nlsr.getNlsrFace().put(*data);
 #ifdef NS3_NLSR_SIM
-  m_tracer.NameLsaTrace(data->getName().toUri(), "outLsaData", std::to_string(++m_outData), std::to_string(data->wireEncode().size()));
+  if (data->getName().size() > 5 && data->getName().get(5).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outNameLsaData", std::to_string(++m_outNlsaData), std::to_string(data->wireEncode().size()));
+  else if (data->getName().size() > 5 && data->getName().get(5).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outAdjLsaData", std::to_string(++m_outLlsaData), std::to_string(data->getName().wireEncode().size()));
+  else if (data->getName().size() > 5 && data->getName().get(5).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outCordLsaData", std::to_string(++m_outClsaData), std::to_string(data->wireEncode().size()));
 #endif
 }
 
@@ -898,7 +913,12 @@ Lsdb::onContent(const ndn::Data& data,
                 uint64_t seqNo)
 {
 #ifdef NS3_NLSR_SIM
-  m_tracer.NameLsaTrace(data.getName().toUri(), "inLsaData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
+  if (data.getName().size() > 5 && data.getName().get(5).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(data.getName().toUri(), "inNameLsaData", std::to_string(++m_inNlsaData), std::to_string(data.wireEncode().size()));
+  else if (data.getName().size() > 5 && data.getName().get(5).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(data.getName().toUri(), "inAdjLsaData", std::to_string(++m_inLlsaData), std::to_string(data.wireEncode().size()));
+  else if (data.getName().size() > 5 && data.getName().get(5).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(data.getName().toUri(), "inCordLsaData", std::to_string(++m_inClsaData), std::to_string(data.wireEncode().size()));
 #endif
 
   _LOG_DEBUG("Received data for LSA(name): " << data.getName());
@@ -1053,7 +1073,12 @@ Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmit
     }
   }
 #ifdef NS3_NLSR_SIM
-  m_tracer.NameLsaTrace(interestName.toUri(), "timedoutInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+  if (interestName.size() > 5 && interestName.get(5).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "timedoutNameLsaInterest", std::to_string(++m_timedoutNlsaInterest), std::to_string(interestName.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "timedoutAdjLsaInterest", std::to_string(++m_timedoutLlsaInterest), std::to_string(interestName.wireEncode().size()));
+  else if (interestName.size() > 5 && interestName.get(5).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "timedoutCordLsaInterest", std::to_string(++m_timedoutClsaInterest), std::to_string(interestName.wireEncode().size()));
 #endif
 }
 
