@@ -604,7 +604,7 @@ Lsdb::buildAdjLsa()
         buildAndInstallOwnAdjLsa();
       }
       else {
-        _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors")
+        _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors");
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
         key.append(AdjLsa::TYPE_STRING);
 
@@ -989,14 +989,15 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
   publisher.publish(interest.getName(),
                     ndn::security::signingByCertificate(m_nlsr.getDefaultCertName()));
 
-#ifdef NS3_NLSR_SIM
-  if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("name") == 0)
-    m_tracer.NameLsaTrace(data->getName().toUri(), "outNameLsaData", std::to_string(++m_outNlsaData), std::to_string(data->wireEncode().size()));
-  else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("adjacency") == 0)
-    m_tracer.NameLsaTrace(data->getName().toUri(), "outAdjLsaData", std::to_string(++m_outLlsaData), std::to_string(data->getName().wireEncode().size()));
-  else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("coordinate") == 0)
-    m_tracer.NameLsaTrace(data->getName().toUri(), "outCordLsaData", std::to_string(++m_outClsaData), std::to_string(data->wireEncode().size()));
-#endif
+  //| Move into LsaContentPublisher
+// #ifdef NS3_NLSR_SIM
+//   if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("name") == 0)
+//     m_tracer.NameLsaTrace(data->getName().toUri(), "outNameLsaData", std::to_string(++m_outNlsaData), std::to_string(data->wireEncode().size()));
+//   else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("adjacency") == 0)
+//     m_tracer.NameLsaTrace(data->getName().toUri(), "outAdjLsaData", std::to_string(++m_outLlsaData), std::to_string(data->getName().wireEncode().size()));
+//   else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("coordinate") == 0)
+//     m_tracer.NameLsaTrace(data->getName().toUri(), "outCordLsaData", std::to_string(++m_outClsaData), std::to_string(data->wireEncode().size()));
+// #endif
 }
 
 void

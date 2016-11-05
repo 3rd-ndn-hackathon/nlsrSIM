@@ -292,7 +292,7 @@ private:
   ndn::time::seconds m_adjLsaBuildInterval;
 
 #ifdef NS3_NLSR_SIM
-  nsr3::ndn::NlsrTracer &m_tracer;
+  ns3::ndn::NlsrTracer &m_tracer;
   long m_outNlsaInterest;
   long m_outLlsaInterest;
   long m_outClsaInterest;
