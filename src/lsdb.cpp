@@ -74,11 +74,10 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
   , m_sync(sync)
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
-{
 #ifdef NS3_NLSR_SIM
+  , m_tracer(ns3::ndn::NlsrTracer::Instance())
+{
   //| Search and replace refactor?
-  ns3::ndn::NlsrTracer m_tracer(ns3::ndn::NlsrTracer::Instance());
-
   m_outNlsaInterest = 0;
   m_outLlsaInterest = 0;
   m_outClsaInterest = 0;
@@ -98,9 +97,11 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
   m_timedoutNlsaInterest = 0;
   m_timedoutLlsaInterest = 0;
   m_timedoutClsaInterest = 0;
-#endif
-  }
 }
+#else
+  {
+  }
+#endif
 
 void
 Lsdb::onFetchLsaError(uint32_t errorCode,

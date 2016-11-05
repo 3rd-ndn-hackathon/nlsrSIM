@@ -82,7 +82,6 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_helloProtocol(*this, scheduler)
   , m_lsdbDatasetHandler(m_nlsrLsdb,
                          m_nlsrFace,
-                         m_confParam.getRouterPrefix(),
                          keyChain)
   , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
   , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
