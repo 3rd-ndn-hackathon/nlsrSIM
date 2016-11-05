@@ -27,7 +27,11 @@
 
 
 #include "adjacent.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
 
 namespace nlsr {
 
@@ -69,6 +73,23 @@ Adjacent::Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
 
   }
 
+#ifdef NS3_NLSR_SIM
+Adjacent::Adjacent(const std::string& simName, const ndn::Name& an, 
+		   const std::string& cfu,  double lc, Status s, 
+		   uint32_t iton, uint64_t faceId)
+    : m_simName(simName)
+    , m_name(an)
+    , m_connectingFaceUri(cfu)
+    , m_linkCost(lc)
+    , m_status(s)
+    , m_interestTimedOutNo(iton)
+    , m_faceId(faceId)
+  {
+
+  }
+
+#endif
+
 bool
 Adjacent::operator==(const Adjacent& adjacent) const
 {
@@ -81,6 +102,9 @@ Adjacent::operator==(const Adjacent& adjacent) const
 void
 Adjacent::writeLog()
 {
+#ifdef NS3_NLSR_SIM
+  _LOG_DEBUG("Simulated Node Name: " << m_simName);
+#endif
   _LOG_DEBUG("Adjacent : " << m_name);
   _LOG_DEBUG("Connecting FaceUri: " << m_connectingFaceUri);
   _LOG_DEBUG("Link Cost: " << m_linkCost);

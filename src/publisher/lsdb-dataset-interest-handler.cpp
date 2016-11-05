@@ -21,7 +21,11 @@
 
 #include "lsdb-dataset-interest-handler.hpp"
 
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
 #include "logger.hpp"
+#endif
 #include "nlsr.hpp"
 
 #include <ndn-cxx/face.hpp>

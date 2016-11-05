@@ -28,6 +28,10 @@
 #include <ndn-cxx/management/nfd-control-parameters.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
+#ifdef NS3_NLSR_SIM
+#include "utils/tracers/ndn-nlsr-tracer.hpp"
+#endif
+
 namespace nlsr {
 
 class Nlsr;
@@ -38,7 +42,15 @@ public:
   HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
     , m_scheduler(scheduler)
+#ifdef NS3_NLSR_SIM
+    , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
   {
+    m_outInterest = 0;
+    m_inData = 0;
+    m_timedOutInterest = 0;
+    m_inInterest = 0;
+    m_outData = 0;
   }
 
   void
@@ -52,6 +64,9 @@ public:
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
+
+  void
+  registerAdjacentPrefixes();
 
 private:
   void
@@ -74,18 +89,35 @@ private:
                         const ndn::Name& name);
 
   void
+  onRegistrationSuccess1(const ndn::nfd::ControlParameters& commandSuccessResult,
+                        const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
+
+  void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                         const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
 
   void
   registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                    double linkCost, const ndn::time::milliseconds& timeout);
+  void
+  registerPrefixes1(const ndn::Name& adjName, const std::string& faceUri,
+                   double linkCost, const ndn::time::milliseconds& timeout);
+private:
 private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
 
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;
+
+#ifdef NS3_NLSR_SIM
+  ns3::ndn::NlsrTracer &m_tracer;
+  long m_outInterest;
+  long m_inData;
+  long m_timedOutInterest;
+  long m_inInterest;
+  long m_outData;
+#endif
 };
 
 } //namespace nlsr

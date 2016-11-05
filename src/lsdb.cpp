@@ -21,7 +21,6 @@
 
 #include "lsdb.hpp"
 
-#include "logger.hpp"
 #include "nlsr.hpp"
 #include "publisher/segment-publisher.hpp"
 #include "utility/name-helper.hpp"
@@ -30,6 +29,11 @@
 #include <ndn-cxx/util/segment-fetcher.hpp>
 
 #include <string>
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#else
+#include "logger.hpp"
+#endif
 
 namespace nlsr {
 
@@ -62,6 +66,7 @@ private:
 const ndn::Name::Component Lsdb::NAME_COMPONENT = ndn::Name::Component("lsdb");
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
 const steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE = steady_clock::TimePoint::min();
+size_t intTypeLoc = 7;
 
 Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
   : m_nlsr(nlsr)
@@ -70,6 +75,31 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
 {
+#ifdef NS3_NLSR_SIM
+  //| Search and replace refactor?
+  ns3::ndn::NlsrTracer m_tracer(ns3::ndn::NlsrTracer::Instance());
+
+  m_outNlsaInterest = 0;
+  m_outLlsaInterest = 0;
+  m_outClsaInterest = 0;
+
+  m_inNlsaInterest = 0;
+  m_inLlsaInterest = 0;
+  m_inClsaInterest = 0;
+
+  m_outNlsaData = 0;
+  m_outLlsaData = 0;
+  m_outClsaData = 0;
+
+  m_inNlsaData = 0;
+  m_inLlsaData = 0;
+  m_inClsaData = 0;
+
+  m_timedoutNlsaInterest = 0;
+  m_timedoutLlsaInterest = 0;
+  m_timedoutClsaInterest = 0;
+#endif
+  }
 }
 
 void
@@ -893,6 +923,15 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                    ndn::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
                                    ndn::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
                                              timeoutCount, deadline, lsaName, seqNo));
+
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outNameLsaInterest", std::to_string(++m_outNlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outAdjLsaInterest", std::to_string(++m_outLlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "outCordLsaInterest", std::to_string(++m_outClsaInterest), std::to_string(interest.wireEncode().size()));
+#endif
 }
 
 void
@@ -900,6 +939,15 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
   const ndn::Name& interestName(interest.getName());
   _LOG_DEBUG("Interest received for LSA: " << interestName);
+
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inNameLsaInterest", std::to_string(++m_inNlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inAdjLsaInterest", std::to_string(++m_inLlsaInterest), std::to_string(interest.wireEncode().size()));
+  else if (m_tracer.IsEnabled() && interestName.size() > intTypeLoc && interestName.get(intTypeLoc).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(interestName.toUri(), "inCordLsaInterest", std::to_string(++m_inClsaInterest), std::to_string(interest.wireEncode().size()));
+#endif
 
   std::string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(interest.getName(), chkString);
@@ -939,6 +987,15 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
                                 content);
   publisher.publish(interest.getName(),
                     ndn::security::signingByCertificate(m_nlsr.getDefaultCertName()));
+
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("name") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outNameLsaData", std::to_string(++m_outNlsaData), std::to_string(data->wireEncode().size()));
+  else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("adjacency") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outAdjLsaData", std::to_string(++m_outLlsaData), std::to_string(data->getName().wireEncode().size()));
+  else if (m_tracer.IsEnabled() && data->getName().size() > intTypeLoc && data->getName().get(intTypeLoc).toUri().compare("coordinate") == 0)
+    m_tracer.NameLsaTrace(data->getName().toUri(), "outCordLsaData", std::to_string(++m_outClsaData), std::to_string(data->wireEncode().size()));
+#endif
 }
 
 void

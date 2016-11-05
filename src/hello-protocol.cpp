@@ -24,7 +24,12 @@
 #include "lsdb.hpp"
 #include "hello-protocol.hpp"
 #include "utility/name-helper.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#include <string>
+#else
 #include "logger.hpp"
+#endif
 
 namespace nlsr {
 
@@ -46,6 +51,11 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
                                                  _1, _2),
                                        ndn::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled()) {
+    m_tracer.HelloTrace(interestName.toUri(), "outHelloInterest", std::to_string(++m_outInterest), std::to_string(i.wireEncode().size()));
+  }
+#endif
 }
 
 void
@@ -90,6 +100,11 @@ HelloProtocol::processInterest(const ndn::Name& name,
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled()) {
+    m_tracer.HelloTrace(interestName.toUri(), "inHelloInterest", std::to_string(++m_inInterest), std::to_string(interest.wireEncode().size()));
+  }
+#endif
   ndn::Name neighbor;
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   _LOG_DEBUG("Neighbor: " << neighbor);
@@ -102,6 +117,11 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
+#ifdef NS3_NLSR_SIM
+    if (m_tracer.IsEnabled()) {
+      m_tracer.HelloTrace(interestName.toUri(), "outHelloData", std::to_string(++m_outData), std::to_string(data->wireEncode().size()));
+    }
+#endif
     Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       if(adjacent->getFaceId() != 0){
@@ -130,6 +150,11 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled()) {
+    m_tracer.HelloTrace(interestName.toUri(), "timedOutHelloInterest", std::to_string(++m_timedOutInterest), std::to_string(interest.wireEncode().size()));
+  }
+#endif
   ndn::Name neighbor = interestName.getPrefix(-3);
   _LOG_DEBUG("Neighbor: " << neighbor);
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
@@ -170,6 +195,12 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
                                  ndn::bind(&HelloProtocol::onContentValidated, this, _1),
                                  ndn::bind(&HelloProtocol::onContentValidationFailed,
                                            this, _1, _2));
+
+#ifdef NS3_NLSR_SIM
+  if (m_tracer.IsEnabled()) {
+    m_tracer.HelloTrace(data.getName().toUri(), "inHelloData", std::to_string(++m_inData), std::to_string(data.wireEncode().size()));
+  }
+#endif
 }
 
 void
@@ -203,6 +234,18 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
 }
 
 void
+HelloProtocol::registerPrefixes1(const ndn::Name& adjName, const std::string& faceUri,
+                               double linkCost, const ndn::time::milliseconds& timeout)
+{
+  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0,
+                                 ndn::bind(&HelloProtocol::onRegistrationSuccess1,
+                                           this, _1, adjName,timeout),
+                                 ndn::bind(&HelloProtocol::onRegistrationFailure,
+                                           this, _1, _2, adjName));
+}
+
+void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, const ndn::time::milliseconds& timeout)
 {
@@ -212,6 +255,30 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                            this, _1, adjName,timeout),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
                                            this, _1, _2, adjName));
+}
+
+void
+HelloProtocol::onRegistrationSuccess1(const ndn::nfd::ControlParameters& commandSuccessResult,
+                                     const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
+{
+  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+  if (adjacent != 0) {
+    adjacent->setFaceId(commandSuccessResult.getFaceId());
+    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+    broadcastKeyPrefix.append("KEYS");
+    std::string faceUri = adjacent->getConnectingFaceUri();
+    double linkCost = adjacent->getLinkCost();
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    m_nlsr.setStrategies();
+  }
 }
 
 void
@@ -271,6 +338,22 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
 
       m_nlsr.getLsdb().scheduleAdjLsaBuild();
     }
+  }
+}
+
+
+void
+HelloProtocol::registerAdjacentPrefixes()
+{
+  std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
+  for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
+       ++it) {
+    _LOG_DEBUG("Registering Adjacent: " << (*it).getName());
+    _LOG_DEBUG("Adjacent name: " << (*it).getName());
+    _LOG_DEBUG("Adjacent face uri: " << (*it).getConnectingFaceUri());
+    _LOG_DEBUG("Adjacent link cost: " << (*it).getLinkCost());
+    registerPrefixes1((*it).getName(), (*it).getConnectingFaceUri(),
+                     (*it).getLinkCost(), ndn::time::milliseconds::max());
   }
 }
 

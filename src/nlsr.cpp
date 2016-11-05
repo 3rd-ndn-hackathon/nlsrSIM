@@ -27,7 +27,12 @@
 
 #include "nlsr.hpp"
 #include "adjacent.hpp"
+#ifdef NS3_NLSR_SIM
+#include "nlsr-logger.hpp"
+#include "ns3/object.h"
+#else
 #include "logger.hpp"
+#endif
 
 
 namespace nlsr {
@@ -39,6 +44,64 @@ const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 using namespace ndn;
 using namespace std;
 
+#ifdef NS3_NLSR_SIM
+ns3::TypeId
+Nlsr::GetTypeId (void)
+{
+  static ns3::TypeId tid = ns3::TypeId ("nlsr::Nlsr")
+    .SetGroupName ("Ndn")
+    .SetParent<Object> ();
+
+  return tid;
+}
+
+Nlsr::~Nlsr()
+{
+}
+#endif
+
+#ifdef NS3_NLSR_SIM
+Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain)
+  : m_nlsrFace(face)
+  , m_scheduler(scheduler)
+  , m_confParam()
+  , m_adjacencyList()
+  , m_namePrefixList()
+  , m_sequencingManager()
+  , m_isDaemonProcess(false)
+  , m_configFileName("nlsr.conf")
+  , m_nlsrLsdb(*this, scheduler, m_syncLogicHandler)
+  , m_adjBuildCount(0)
+  , m_isBuildAdjLsaSheduled(false)
+  , m_isRouteCalculationScheduled(false)
+  , m_isRoutingTableCalculating(false)
+  , m_routingTable(scheduler)
+  , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, keyChain)
+  , m_namePrefixTable(*this)
+  , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam, m_sequencingManager)
+  , m_helloProtocol(*this, scheduler)
+  , m_lsdbDatasetHandler(m_nlsrLsdb,
+                         m_nlsrFace,
+                         m_confParam.getRouterPrefix(),
+                         keyChain)
+  , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
+  , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
+  , m_keyChain(keyChain)
+  , m_prefixUpdateProcessor(m_nlsrFace,
+                            m_namePrefixList,
+                            m_nlsrLsdb,
+                            m_syncLogicHandler,
+                            DEFAULT_BROADCAST_PREFIX,
+                            m_keyChain,
+                            m_certificateCache,
+                            m_certStore)
+  , m_faceMonitor(m_nlsrFace)
+  , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
+{
+  m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
+  m_faceMonitor.start();
+}
+#else
 Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face)
   : m_nlsrFace(face)
   , m_scheduler(scheduler)
@@ -77,6 +140,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
   m_faceMonitor.start();
 }
+#endif
 
 void
 Nlsr::registrationFailed(const ndn::Name& name)
@@ -192,7 +256,11 @@ Nlsr::initialize()
   m_adjacencyList.writeLog();
   m_namePrefixList.writeLog();
   /* Logging end */
+#ifdef NS3_NLSR_SIM
+  //initializeKey();
+#else
   initializeKey();
+#endif
   setStrategies();
   _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
   setInfoInterestFilter();
@@ -212,6 +280,7 @@ Nlsr::initialize()
 
   registerKeyPrefix();
   registerLocalhostPrefix();
+  m_helloProtocol.registerAdjacentPrefixes();
 
   m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 

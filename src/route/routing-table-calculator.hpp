@@ -29,6 +29,10 @@
 
 #include <ndn-cxx/name.hpp>
 
+#ifdef NS3_NLSR_SIM
+#include "utils/tracers/ndn-nlsr-tracer.hpp"
+#endif
+
 namespace nlsr {
 
 class Map;
@@ -106,7 +110,12 @@ public:
     , INF_DISTANCE(2147483647)
     , NO_MAPPING_NUM(-1)
     , NO_NEXT_HOP(-12345)
+#ifdef NS3_NLSR_SIM
+    , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
   {
+    m_dijkSinglePath = 0;
+    m_dijkMultiPath = 0;
   }
 
   void
@@ -150,6 +159,11 @@ private:
   const int NO_MAPPING_NUM;
   const int NO_NEXT_HOP;
 
+#ifdef NS3_NLSR_SIM
+  ns3::ndn::NlsrTracer &m_tracer;
+  long m_dijkSinglePath;
+  long m_dijkMultiPath;
+#endif
 };
 
 class AdjacencyList;
@@ -162,7 +176,12 @@ public:
     : m_nRouters(nRouters)
     , m_isDryRun(isDryRun)
     , m_thisRouterName(thisRouterName)
+#ifdef NS3_NLSR_SIM
+    , m_tracer(ns3::ndn::NlsrTracer::Instance())
+#endif
   {
+    m_hyperbolRouting = 0;
+    m_hyperDryRouting = 0;
   }
 
   void
@@ -184,6 +203,12 @@ private:
   static const double UNKNOWN_DISTANCE;
   static const double UNKNOWN_RADIUS;
   static const int32_t ROUTER_NOT_FOUND;
+
+#ifdef NS3_NLSR_SIM
+  ns3::ndn::NlsrTracer &m_tracer;
+  long m_hyperbolRouting;
+  long m_hyperDryRouting;
+#endif
 };
 
 }//namespace nlsr

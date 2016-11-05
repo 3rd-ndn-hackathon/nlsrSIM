@@ -50,12 +50,19 @@
 #include "update/prefix-update-processor.hpp"
 #include "utility/name-helper.hpp"
 
+#ifdef NS3_NLSR_SIM
+#include "ns3/object.h"
+#endif
 
 namespace nlsr {
 
 static ndn::Name DEFAULT_BROADCAST_PREFIX("/ndn/broadcast");
 
+#ifdef NS3_NLSR_SIM
+class Nlsr : public ns3::Object
+#else
 class Nlsr
+#endif
 {
   class Error : public std::runtime_error
   {
@@ -68,7 +75,13 @@ class Nlsr
   };
 
 public:
+#ifdef NS3_NLSR_SIM
+  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain);
+  static ns3::TypeId GetTypeId (void);
+  ~Nlsr();
+#else
   Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face);
+#endif
 
   void
   registrationFailed(const ndn::Name& name);
@@ -381,7 +394,11 @@ private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   security::CertificateStore m_certStore;
   Validator m_validator;
+#ifdef NS3_NLSR_SIM
+  ndn::KeyChain& m_keyChain;
+#else
   ndn::KeyChain m_keyChain;
+#endif
   ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
